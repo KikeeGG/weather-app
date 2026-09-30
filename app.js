@@ -452,6 +452,7 @@ function cambiarVideo(tipo) {
         nuevoVideo;
 
     video.load();
+    video.playbackRate = 0.5;
 
     const mostrarVideo = () => {
         video.style.opacity =
