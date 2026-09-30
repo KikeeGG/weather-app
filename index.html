@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#202b3d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mi Tiempo">
+    <title>Mi Tiempo ❤️</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <video
+        id="fondoVideo"
+        class="fondo-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata">
+    </video>
+
+    <div class="fondo-desenfoque"></div>
+    <div class="fondo-oscuro"></div>
+
+    <main class="app">
+
+        <header class="cabecera">
+
+            <div>
+                <p class="marca">Mi Tiempo <span>♥</span></p>
+                <p class="fecha" id="fecha">Cargando...</p>
+            </div>
+
+            <button class="boton-busqueda" id="abrirBusqueda" aria-label="Buscar ciudad">
+                ⌕
+            </button>
+
+        </header>
+
+        <section class="busqueda" id="busqueda">
+
+            <div class="campo-busqueda">
+                <span>⌕</span>
+
+                <input
+                    type="text"
+                    id="ciudad"
+                    placeholder="Buscar ciudad..."
+                    value="Leganés">
+
+                <button id="buscar">
+                    Buscar
+                </button>
+            </div>
+
+            <button class="cerrar-busqueda" id="cerrarBusqueda">
+                Cancelar
+            </button>
+
+        </section>
+
+        <section class="mensaje">
+
+            <div class="mensaje-etiqueta">
+                <span class="pulso"></span>
+                ÚLTIMA HORA
+            </div>
+
+            <div class="ticker">
+                <div class="ticker-contenido" id="mensajeAmor">
+                    Cargando...
+                </div>
+            </div>
+
+        </section>
+
+        <p class="error" id="error"></p>
+
+        <section class="principal">
+
+            <div class="ubicacion">
+                <span class="punto"></span>
+                <span id="nombreCiudad">Leganés</span>
+            </div>
+
+            <div class="temperatura" id="temperatura">
+                --°
+            </div>
+
+            <div class="descripcion" id="descripcion">
+                Cargando...
+            </div>
+
+            <div class="temperaturas-secundarias">
+                <span>
+                    Máx <strong id="maxima">--°</strong>
+                </span>
+
+                <span>
+                    Mín <strong id="minima">--°</strong>
+                </span>
+            </div>
+
+        </section>
+
+        <section class="bloque">
+
+            <div class="titulo-bloque">
+                <span>PRÓXIMAS HORAS</span>
+                <span id="horaActual"></span>
+            </div>
+
+            <div class="carrusel horas" id="horas"></div>
+
+        </section>
+
+        <section class="bloque">
+
+            <div class="titulo-bloque">
+                <span>CONDICIONES</span>
+            </div>
+
+            <div class="datos">
+
+                <div class="dato">
+                    <span class="dato-icono">Temperatura</span>
+                    <strong id="sensacion">--°</strong>
+                    <small>Sensación</small>
+                </div>
+
+                <div class="dato">
+                    <span class="dato-icono">Humedad</span>
+                    <strong id="humedad">--%</strong>
+                    <small>Humedad</small>
+                </div>
+
+                <div class="dato">
+                    <span class="dato-icono">Viento</span>
+                    <strong id="viento">-- km/h</strong>
+                    <small id="direccionViento">--</small>
+                </div>
+
+                <div class="dato">
+                    <span class="dato-icono">Rachas</span>
+                    <strong id="rachas">-- km/h</strong>
+                    <small>Máximas</small>
+                </div>
+
+                <div class="dato">
+                    <span class="dato-icono">Visibilidad</span>
+                    <strong id="visibilidad">-- km</strong>
+                    <small>Distancia</small>
+                </div>
+
+                <div class="dato">
+                    <span class="dato-icono">Presión</span>
+                    <strong id="presion">-- hPa</strong>
+                    <small>Atmosférica</small>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="bloque">
+
+            <div class="titulo-bloque">
+                <span>SOL</span>
+            </div>
+
+            <div class="sol">
+
+                <div>
+                    <span class="sol-icono">↑</span>
+
+                    <div>
+                        <small>Amanecer</small>
+                        <strong id="amanecer">--:--</strong>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="sol-icono">↓</span>
+
+                    <div>
+                        <small>Atardecer</small>
+                        <strong id="atardecer">--:--</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="bloque">
+
+            <div class="titulo-bloque">
+                <span>PRÓXIMOS DÍAS</span>
+            </div>
+
+            <div class="carrusel dias" id="prevision"></div>
+
+        </section>
+
+        <footer>
+            Datos meteorológicos de Open-Meteo
+        </footer>
+
+    </main>
+
+    <script src="app.js"></script>
+
+</body>
+</html>

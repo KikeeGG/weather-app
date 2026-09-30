@@ -1,0 +1,601 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --cristal: rgba(255, 255, 255, 0.14);
+    --borde: rgba(255, 255, 255, 0.18);
+    --texto: #ffffff;
+    --texto-suave: rgba(255, 255, 255, 0.68);
+    --sombra: rgba(0, 0, 0, 0.18);
+    --rojo-ultima-hora: #ff4f73;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    color: var(--texto);
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+    background: #26364d;
+    overflow-x: hidden;
+}
+
+body.soleado {
+    background: #5d9dcc;
+}
+
+body.nublado {
+    background: #5f7180;
+}
+
+body.lluvia {
+    background: #344c61;
+}
+
+body.tormenta {
+    background: #202b3d;
+}
+
+body.nieve {
+    background: #7894a8;
+}
+
+body.noche {
+    background: #172238;
+}
+
+.fondo-video {
+    position: fixed;
+    inset: -5%;
+    width: 110%;
+    height: 110%;
+    object-fit: cover;
+    z-index: 0;
+    filter: blur(14px);
+    transform: scale(1.08);
+    opacity: 0.72;
+    transition: opacity 0.8s ease;
+}
+
+.fondo-desenfoque {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+}
+
+.fondo-oscuro {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.18) 0%,
+            rgba(0, 0, 0, 0.05) 35%,
+            rgba(0, 0, 0, 0.28) 100%
+        );
+}
+
+.app {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    max-width: 520px;
+    min-height: 100vh;
+    margin: auto;
+    padding:
+        calc(20px + env(safe-area-inset-top))
+        18px
+        calc(35px + env(safe-area-inset-bottom));
+}
+
+.cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.marca {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.marca span {
+    color: #ff5c83;
+}
+
+.fecha {
+    margin-top: 3px;
+    font-size: 13px;
+    color: var(--texto-suave);
+    text-transform: capitalize;
+}
+
+.boton-busqueda {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--borde);
+    border-radius: 50%;
+    color: white;
+    background: rgba(255, 255, 255, 0.13);
+    font-size: 23px;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.busqueda {
+    display: none;
+    margin-bottom: 12px;
+}
+
+.busqueda.visible {
+    display: block;
+}
+
+.campo-busqueda {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px 5px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.campo-busqueda > span {
+    font-size: 20px;
+    opacity: 0.8;
+}
+
+.campo-busqueda input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    color: white;
+    background: transparent;
+    font: inherit;
+    font-size: 15px;
+}
+
+.campo-busqueda input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.campo-busqueda button {
+    padding: 9px 13px;
+    border: none;
+    border-radius: 12px;
+    color: #243041;
+    background: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cerrar-busqueda {
+    margin-top: 8px;
+    border: none;
+    color: white;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.mensaje {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    margin: 8px 0 8px;
+    overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mensaje-etiqueta {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 7px;
+    height: 100%;
+    padding: 0 12px 0 4px;
+    color: var(--rojo-ultima-hora);
+    background: rgba(20, 25, 35, 0.28);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.pulso {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--rojo-ultima-hora);
+    box-shadow: 0 0 8px rgba(255, 79, 115, 0.9);
+    animation: pulso 1.4s ease-in-out infinite;
+}
+
+.ticker {
+    position: relative;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+}
+
+.ticker-contenido {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 0 8px;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.ticker-contenido.animando {
+    animation: aparecerFrase 0.7s ease both;
+}
+
+.error {
+    min-height: 18px;
+    margin-bottom: 4px;
+    color: white;
+    text-align: center;
+    font-size: 13px;
+}
+
+.principal {
+    text-align: center;
+    padding: 16px 10px 28px;
+}
+
+.ubicacion {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 10px;
+    font-size: 21px;
+    font-weight: 500;
+    letter-spacing: -0.4px;
+}
+
+.punto {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.temperatura {
+    font-size: clamp(78px, 22vw, 105px);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -5px;
+    text-shadow: 0 3px 20px rgba(0, 0, 0, 0.12);
+}
+
+.descripcion {
+    margin-top: 9px;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.temperaturas-secundarias {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 8px;
+    color: var(--texto-suave);
+    font-size: 14px;
+}
+
+.temperaturas-secundarias strong {
+    color: white;
+    font-weight: 500;
+}
+
+.bloque {
+    margin-top: 13px;
+}
+
+.titulo-bloque {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px 9px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+}
+
+.carrusel {
+    display: flex;
+    gap: 9px;
+    overflow-x: auto;
+    padding: 1px 2px 7px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+
+.carrusel::-webkit-scrollbar {
+    display: none;
+}
+
+.horas {
+    padding-left: 2px;
+}
+
+.hora {
+    flex: 0 0 70px;
+    padding: 13px 7px;
+    border: 1px solid var(--borde);
+    border-radius: 18px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    scroll-snap-align: start;
+}
+
+.hora.actual {
+    background: rgba(255, 255, 255, 0.23);
+}
+
+.hora-nombre {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--texto-suave);
+    font-size: 12px;
+}
+
+.hora.actual .hora-nombre {
+    color: white;
+}
+
+.hora-icono {
+    display: block;
+    height: 28px;
+    margin-bottom: 9px;
+    font-size: 22px;
+    line-height: 28px;
+}
+
+.hora-temperatura {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.hora-lluvia {
+    display: block;
+    margin-top: 5px;
+    color: #d5f1ff;
+    font-size: 10px;
+}
+
+.datos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.dato {
+    min-height: 105px;
+    padding: 15px;
+    border: 1px solid var(--borde);
+    border-radius: 19px;
+    background: var(--cristal);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 8px 30px var(--sombra);
+}
+
+.dato-icono {
+    display: block;
+    margin-bottom: 14px;
+    color: var(--texto-suave);
+    font-size: 12px;
+}
+
+.dato strong {
+    display: block;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+}
+
+.dato small {
+    display: block;
+    margin-top: 4px;
+    color: var(--texto-suave);
+    font-size: 11px;
+}
+
+.sol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--borde);
+    border-radius: 19px;
+    background: var(--cristal);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    overflow: hidden;
+}
+
+.sol > div {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 17px;
+}
+
+.sol > div + div {
+    border-left: 1px solid var(--borde);
+}
+
+.sol-icono {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 18px;
+}
+
+.sol small {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--texto-suave);
+    font-size: 11px;
+}
+
+.sol strong {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.dias {
+    gap: 9px;
+}
+
+.dia {
+    flex: 0 0 135px;
+    min-height: 145px;
+    padding: 15px;
+    border: 1px solid var(--borde);
+    border-radius: 19px;
+    background: var(--cristal);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    scroll-snap-align: start;
+}
+
+.dia-nombre {
+    color: var(--texto-suave);
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.dia-icono {
+    display: block;
+    margin: 17px 0 12px;
+    font-size: 30px;
+}
+
+.dia-temperaturas {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dia-max {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.dia-min {
+    color: var(--texto-suave);
+    font-size: 15px;
+}
+
+.dia-lluvia {
+    display: block;
+    margin-top: 8px;
+    color: #d5f1ff;
+    font-size: 11px;
+}
+
+footer {
+    padding: 28px 0 5px;
+    color: rgba(255, 255, 255, 0.48);
+    text-align: center;
+    font-size: 11px;
+}
+
+@keyframes pulso {
+    0%, 100% {
+        opacity: 0.45;
+        transform: scale(0.8);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes aparecerFrase {
+    0% {
+        opacity: 0;
+        transform: translateX(14px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (min-width: 700px) {
+    .app {
+        padding-top: 40px;
+    }
+
+    .principal {
+        padding-top: 30px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .fondo-video {
+        display: none;
+    }
+
+    .pulso {
+        animation: none;
+    }
+
+    .ticker-contenido {
+        animation: none;
+    }
+}
