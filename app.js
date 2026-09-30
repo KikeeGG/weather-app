@@ -39,26 +39,26 @@ const videos = {
 };
 
 const frasesAmor = [
-    "Carolina mia te como la cara",
-    "Mas guapa y te meten en un museo <3",
-    "Alerta meteorológica: muchas ganas de verte je",
-    "Da igual el tiempo que haga, siempre estas radiante",
-    "Como dijo TheWeeknd, beibe pero que presiosa",
-    "Recuerda darle un kiss a tu noviecito",
-    "Hoy hace un dia perfecto pa ver Crepusculo, ¿no?",
-    "Hoy me gustas más, mañana más todavía y, ¿pasado?, MáS",
-    "Kike te echa de menos... aunque te tenga al lado",
-    "Que tengas un hermoso día churri <3",
-    "Aviso para el resto del día, Kike te ama",
-    "Cuidado si hace calor que te derrites, bombom",
-    "Procura no opacar al Lorenzo cuando salgas a la calle",
-    "All the times in the wedour o algo asi dice la Clove",
-    "Tiempo perfecto para un café con el amor de mi vidita",
-    "Te deseo lo mejor del mundo, te lo mereces",
-    "Te quiero mas que la trucha al trucho, trucha mía",
-    "Parte meteorológico: la carol esta tope buena",
-    "El cielo es bonito hoy, la Carol más todavía",
-    "Si lees esto, medebes un beso"
+    "Carolina, te como la cara.",
+    "Mas guapa y te meten en un museo <3.",
+    "Alerta meteorológica: muchas ganas de verte je.",
+    "Da igual el tiempo que haga, siempre estas radiante.",
+    "Tu novio te manda arrumacos.",
+    "Recuerda darle un kiss a tu noviecito.",
+    "Hoy hace un dia perfecto pa ver Crepusculo, ¿no?.",
+    "Hoy me gustas más, mañana más todavía y, ¿pasado?, MáS.",
+    "Kike te echa de menos... aunque te tenga al lado.",
+    "Que tengas un hermoso día churri <3.",
+    "Aviso para el resto del día, Kike te ama.",
+    "Cuidado si hace calor que te derrites, bombom.",
+    "Procura no opacar al Lorenzo cuando salgas a la calle.",
+    "All the times in the wedour o algo asi dice la Clove.",
+    "Tiempo perfecto para un café con el amor de mi vidita.",
+    "Te deseo lo mejor del mundo, te lo mereces.",
+    "Te quiero mas que la trucha al trucho, trucha mía.",
+    "Parte meteorológico: la carol esta tope buena.",
+    "El cielo es bonito hoy, la Carol más todavía.",
+    "Si lees esto, medebes un beso."
 ];
 
 let videoActual = "";
@@ -430,6 +430,11 @@ function cambiarVideo(tipo) {
     videoActual =
         nuevoVideo;
 
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = true;
+    video.playbackRate = 0.5;
+
     video.style.opacity =
         "0";
 
@@ -437,17 +442,26 @@ function cambiarVideo(tipo) {
         nuevoVideo;
 
     video.load();
-    video.playbackRate = 0.5;
 
-    video.play()
-        .then(() => {
-            video.style.opacity =
-                "0.72";
-        })
-        .catch(() => {
-            video.style.opacity =
-                "0";
-        });
+    video.oncanplay = () => {
+
+        video.style.opacity =
+            "0.72";
+
+        video.playbackRate =
+            0.5;
+
+        video.play()
+            .catch(error => {
+                console.log(
+                    "El vídeo no ha podido iniciar automáticamente:",
+                    error
+                );
+
+                video.style.opacity =
+                    "0.72";
+            });
+    };
 }
 
 function obtenerDireccionViento(grados) {
