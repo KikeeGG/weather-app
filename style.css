@@ -67,6 +67,7 @@ body.noche {
     transform: scale(1.08);
     opacity: 0.72;
     transition: opacity 0.8s ease;
+    pointer-events: none;
 }
 
 .fondo-desenfoque {
@@ -113,7 +114,7 @@ body.noche {
 }
 
 .marca {
-    font-size: 22px;
+    font-size: 17px;
     font-weight: 600;
     letter-spacing: -0.2px;
 }
@@ -152,15 +153,16 @@ body.noche {
     display: block;
 }
 
-.campo-busqueda input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    outline: none;
-    color: white;
-    background: transparent;
-    font: inherit;
-    font-size: 16px;
+.campo-busqueda {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px 5px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 .campo-busqueda > span {
@@ -176,7 +178,7 @@ body.noche {
     color: white;
     background: transparent;
     font: inherit;
-    font-size: 15px;
+    font-size: 16px;
 }
 
 .campo-busqueda input::placeholder {
@@ -584,10 +586,6 @@ footer {
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
-    }
-
-    .fondo-video {
-        display: none;
     }
 
     .pulso {
