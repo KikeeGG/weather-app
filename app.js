@@ -39,26 +39,26 @@ const videos = {
 };
 
 const frasesAmor = [
-    "Carolina, te como la cara.",
-    "Mas guapa y te meten en un museo <3.",
-    "Alerta meteorológica: muchas ganas de verte je.",
-    "Da igual el tiempo que haga, siempre estas radiante.",
-    "Tu novio te manda arrumacos.",
-    "Recuerda darle un kiss a tu noviecito.",
-    "Hoy hace un dia perfecto pa ver Crepusculo, ¿no?.",
-    "Hoy me gustas más, mañana más todavía y, ¿pasado?, MáS.",
-    "Kike te echa de menos... aunque te tenga al lado.",
-    "Que tengas un hermoso día churri <3.",
-    "Aviso para el resto del día, Kike te ama.",
-    "Cuidado si hace calor que te derrites, bombom.",
-    "Procura no opacar al Lorenzo cuando salgas a la calle.",
-    "All the times in the wedour o algo asi dice la Clove.",
-    "Tiempo perfecto para un café con el amor de mi vidita.",
-    "Te deseo lo mejor del mundo, te lo mereces.",
-    "Te quiero mas que la trucha al trucho, trucha mía.",
-    "Parte meteorológico: la carol esta tope buena.",
-    "El cielo es bonito hoy, la Carol más todavía.",
-    "Si lees esto, medebes un beso."
+    "Carolina mia te como la cara",
+    "Mas guapa y te meten en un museo <3",
+    "Alerta meteorológica: muchas ganas de verte je",
+    "Da igual el tiempo que haga, siempre estas radiante",
+    "Como dijo TheWeeknd, beibe pero que presiosa",
+    "Recuerda darle un kiss a tu noviecito",
+    "Hoy hace un dia perfecto pa ver Crepusculo, ¿no?",
+    "Hoy me gustas más, mañana más todavía y, ¿pasado?, MáS",
+    "Kike te echa de menos... aunque te tenga al lado",
+    "Que tengas un hermoso día churri <3",
+    "Aviso para el resto del día, Kike te ama",
+    "Cuidado si hace calor que te derrites, bombom",
+    "Procura no opacar al Lorenzo cuando salgas a la calle",
+    "All the times in the wedour o algo asi dice la Clove",
+    "Tiempo perfecto para un café con el amor de mi vidita",
+    "Te deseo lo mejor del mundo, te lo mereces",
+    "Te quiero mas que la trucha al trucho, trucha mía",
+    "Parte meteorológico: la carol esta tope buena",
+    "El cielo es bonito hoy, la Carol más todavía",
+    "Si lees esto, medebes un beso"
 ];
 
 let videoActual = "";
@@ -430,10 +430,20 @@ function cambiarVideo(tipo) {
     videoActual =
         nuevoVideo;
 
+    video.pause();
+
     video.muted = true;
-    video.playsInline = true;
+    video.defaultMuted = true;
     video.autoplay = true;
-    video.playbackRate = 0.5;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute(
+        "playsinline",
+        ""
+    );
+
+    video.playbackRate =
+        0.5;
 
     video.style.opacity =
         "0";
@@ -443,26 +453,122 @@ function cambiarVideo(tipo) {
 
     video.load();
 
-    video.oncanplay = () => {
-
+    const mostrarVideo = () => {
         video.style.opacity =
             "0.72";
 
         video.playbackRate =
             0.5;
-
-        video.play()
-            .catch(error => {
-                console.log(
-                    "El vídeo no ha podido iniciar automáticamente:",
-                    error
-                );
-
-                video.style.opacity =
-                    "0.72";
-            });
     };
+
+    const reproducirVideo = () => {
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playbackRate = 0.5;
+
+        const reproduccion =
+            video.play();
+
+        if (
+            reproduccion &&
+            typeof reproduccion.catch === "function"
+        ) {
+            reproduccion
+                .then(() => {
+                    mostrarVideo();
+                })
+                .catch(error => {
+                    console.log(
+                        "Autoplay bloqueado:",
+                        error
+                    );
+
+                    if (
+                        video.readyState >= 2
+                    ) {
+                        mostrarVideo();
+                    }
+                });
+        }
+    };
+
+    video.onloadeddata =
+        () => {
+            mostrarVideo();
+            reproducirVideo();
+        };
+
+    video.oncanplay =
+        () => {
+            mostrarVideo();
+            reproducirVideo();
+        };
+
+    video.onplaying =
+        () => {
+            mostrarVideo();
+        };
+
+    video.onerror =
+        () => {
+            console.error(
+                "No se ha podido cargar el vídeo:",
+                nuevoVideo
+            );
+        };
+
+    setTimeout(() => {
+        if (
+            video.readyState >= 2
+        ) {
+            mostrarVideo();
+            reproducirVideo();
+        }
+    }, 500);
 }
+
+function activarVideo() {
+    const video =
+        document.getElementById(
+            "fondoVideo"
+        );
+
+    if (!video) {
+        return;
+    }
+
+    video.muted = true;
+    video.defaultMuted = true;
+
+    video.play()
+        .then(() => {
+            video.style.opacity =
+                "0.72";
+
+            video.playbackRate =
+                0.5;
+        })
+        .catch(() => {
+        });
+}
+
+document.addEventListener(
+    "touchstart",
+    activarVideo,
+    {
+        once: true,
+        passive: true
+    }
+);
+
+document.addEventListener(
+    "pointerdown",
+    activarVideo,
+    {
+        once: true,
+        passive: true
+    }
+);
 
 function obtenerDireccionViento(grados) {
     const direcciones = [
