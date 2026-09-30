@@ -63,19 +63,18 @@ body.noche {
     height: 110%;
     object-fit: cover;
     z-index: 0;
-    filter: blur(10px);
+    filter: blur(5px);
     transform: scale(1.08);
     opacity: 0.72;
     transition: opacity 0.8s ease;
-    pointer-events: none;
 }
 
 .fondo-desenfoque {
     position: fixed;
     inset: 0;
     z-index: 1;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     pointer-events: none;
 }
 
@@ -114,7 +113,7 @@ body.noche {
 }
 
 .marca {
-    font-size: 17px;
+    font-size: 22px;
     font-weight: 600;
     letter-spacing: -0.2px;
 }
@@ -153,16 +152,15 @@ body.noche {
     display: block;
 }
 
-.campo-busqueda {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 6px 5px 14px;
-    border: 1px solid var(--borde);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.16);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+.campo-busqueda input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    color: white;
+    background: transparent;
+    font: inherit;
+    font-size: 16px;
 }
 
 .campo-busqueda > span {
@@ -178,7 +176,7 @@ body.noche {
     color: white;
     background: transparent;
     font: inherit;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .campo-busqueda input::placeholder {
@@ -254,7 +252,8 @@ body.noche {
     left: 0;
     display: flex;
     align-items: center;
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
     height: 100%;
     padding: 0 8px;
     color: rgba(255, 255, 255, 0.92);
@@ -262,12 +261,12 @@ body.noche {
     font-weight: 400;
     line-height: 1.2;
     white-space: nowrap;
-    opacity: 1;
-    transform: translateX(0);
+    opacity: 0;
+    transform: translateX(100%);
 }
 
 .ticker-contenido.animando {
-    animation: aparecerFrase 0.7s ease both;
+    animation: moverFrase 6.5s linear both;
 }
 
 .error {
@@ -561,15 +560,23 @@ footer {
     }
 }
 
-@keyframes aparecerFrase {
+@keyframes moverFrase {
     0% {
         opacity: 0;
-        transform: translateX(14px);
+        transform: translateX(100%);
+    }
+
+    8% {
+        opacity: 1;
+    }
+
+    88% {
+        opacity: 1;
     }
 
     100% {
-        opacity: 1;
-        transform: translateX(0);
+        opacity: 0;
+        transform: translateX(-100%);
     }
 }
 
@@ -589,10 +596,6 @@ footer {
     }
 
     .pulso {
-        animation: none;
-    }
-
-    .ticker-contenido {
         animation: none;
     }
 }
