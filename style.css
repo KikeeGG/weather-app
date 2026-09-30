@@ -63,7 +63,7 @@ body.noche {
     height: 110%;
     object-fit: cover;
     z-index: 0;
-    filter: blur(5px);
+    filter: blur(10px);
     transform: scale(1.08);
     opacity: 0.72;
     transition: opacity 0.8s ease;
@@ -74,8 +74,8 @@ body.noche {
     position: fixed;
     inset: 0;
     z-index: 1;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     pointer-events: none;
 }
 
