@@ -1,4 +1,4 @@
-const CACHE_NAME = "mi-tiempo-v5";
+const CACHE_NAME = "mi-tiempo-v6";
 
 const ARCHIVOS = [
     "./",
@@ -47,9 +47,10 @@ self.addEventListener(
                             )
                     );
                 })
+                .then(() => {
+                    return self.clients.claim();
+                })
         );
-
-        self.clients.claim();
     }
 );
 
@@ -63,16 +64,47 @@ self.addEventListener(
             return;
         }
 
+        const url =
+            new URL(
+                event.request.url
+            );
+
+        if (
+            url.origin !==
+            self.location.origin
+        ) {
+            return;
+        }
+
         event.respondWith(
-            caches.match(
-                event.request
-            ).then(
-                response =>
-                    response ||
-                    fetch(
+            fetch(event.request)
+                .then(response => {
+
+                    if (
+                        response &&
+                        response.status === 200
+                    ) {
+                        const copia =
+                            response.clone();
+
+                        caches.open(
+                            CACHE_NAME
+                        ).then(cache => {
+                            cache.put(
+                                event.request,
+                                copia
+                            );
+                        });
+                    }
+
+                    return response;
+
+                })
+                .catch(() => {
+                    return caches.match(
                         event.request
-                    )
-            )
+                    );
+                })
         );
     }
 );
