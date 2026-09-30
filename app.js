@@ -39,26 +39,26 @@ const videos = {
 };
 
 const frasesAmor = [
-    "Última hora: hay un 100% de posibilidades de que me acuerde de ti.",
-    "El pronóstico de hoy indica que eres mi parte favorita del día.",
-    "Alerta meteorológica: demasiadas ganas de verte.",
-    "Se esperan abrazos durante todo el día.",
-    "Última hora: sigues siendo mi persona favorita.",
-    "La previsión anuncia un día perfecto para estar contigo.",
-    "Temperaturas agradables y un 100% de posibilidades de quererte.",
-    "Aviso importante: no hay nube capaz de tapar lo mucho que me gustas.",
-    "El tiempo puede cambiar, pero mis ganas de estar contigo no.",
-    "Previsión para hoy: tú, yo y un día bonito.",
-    "Se esperan cielos despejados y pensamientos sobre ti.",
-    "Última hora: eres oficialmente mi lugar favorito.",
-    "Hay probabilidades muy altas de que te eche de menos hoy.",
-    "El pronóstico no lo dice, pero tú haces que cualquier día sea mejor.",
-    "Se aproxima una ola de cariño. No se esperan precipitaciones.",
-    "Hoy el tiempo acompaña, pero tú sigues siendo lo mejor.",
-    "Máxima de cariño y mínima de ganas de separarme de ti.",
-    "Parte meteorológico: te quiero. Sin cambios previstos.",
-    "El cielo está bonito, pero no tanto como tú.",
-    "Última hora: mi previsión sigue siendo quererte todos los días."
+    "Carolina mia te como la cara",
+    "Mas guapa y te meten en un museo <3",
+    "Alerta meteorológica: muchas ganas de verte je",
+    "Da igual el tiempo que haga, siempre estas radiante",
+    "Como dijo TheWeeknd, beibe pero que presiosa",
+    "Recuerda darle un kiss a tu noviecito",
+    "Hoy hace un dia perfecto pa ver Crepusculo, ¿no?",
+    "Hoy me gustas más, mañana más todavía y, ¿pasado?, MáS",
+    "Kike te echa de menos... aunque te tenga al lado",
+    "Que tengas un hermoso día churri <3",
+    "Aviso para el resto del día, Kike te ama",
+    "Cuidado si hace calor que te derrites, bombom",
+    "Procura no opacar al Lorenzo cuando salgas a la calle",
+    "All the times in the wedour o algo asi dice la Clove",
+    "Tiempo perfecto para un café con el amor de mi vidita",
+    "Te deseo lo mejor del mundo, te lo mereces",
+    "Te quiero mas que la trucha al trucho, trucha mía",
+    "Parte meteorológico: la carol esta tope buena",
+    "El cielo es bonito hoy, la Carol más todavía",
+    "Si lees esto, medebes un beso"
 ];
 
 let videoActual = "";
