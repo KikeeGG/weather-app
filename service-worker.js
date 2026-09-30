@@ -1,4 +1,4 @@
-const CACHE_NAME = "mi-tiempo-v7";
+const CACHE_NAME = "mi-tiempo-v8";
 
 const ARCHIVOS = [
     "./",
@@ -34,17 +34,11 @@ self.addEventListener(
                 .then(cacheNames => {
                     return Promise.all(
                         cacheNames
-                            .filter(
-                                cacheName =>
-                                    cacheName !==
-                                    CACHE_NAME
-                            )
-                            .map(
-                                cacheName =>
-                                    caches.delete(
-                                        cacheName
-                                    )
-                            )
+                            .map(cacheName => {
+                                return caches.delete(
+                                    cacheName
+                                );
+                            })
                     );
                 })
                 .then(() => {
@@ -80,30 +74,15 @@ self.addEventListener(
             fetch(event.request)
                 .then(response => {
 
-                    if (
-                        response &&
-                        response.status === 200
-                    ) {
-                        const copia =
-                            response.clone();
-
-                        caches.open(
-                            CACHE_NAME
-                        ).then(cache => {
-                            cache.put(
-                                event.request,
-                                copia
-                            );
-                        });
-                    }
-
                     return response;
 
                 })
                 .catch(() => {
+
                     return caches.match(
                         event.request
                     );
+
                 })
         );
     }
