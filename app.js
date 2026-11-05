@@ -97,74 +97,315 @@ function formatearKilometros(metros) {
     return "-- km";
 }
 
-async function buscarCiudad(ciudad) {
-    try {
-        mostrarError("");
+const CIUDAD_POR_DEFECTO = "Leganés, Madrid";
+const CLAVE_CIUDAD = "tiempo.ciudad";
+const CLAVE_ULTIMO = "tiempo.ultimo";
 
-        const respuestaCiudad = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(ciudad)}&count=1&language=es&format=json`
+const TIEMPO_MAXIMO_MS = 10000;
+const REFRESCO_PERIODICO_MS = 30 * 60 * 1000;
+const REFRESCO_AL_VOLVER_MS = 10 * 60 * 1000;
+const COMPROBACION_MS = 5 * 60 * 1000;
+
+// Errores con un mensaje ya pensado para mostrar a la persona.
+class ErrorAplicacion extends Error {}
+
+let lugarActual = null;
+let hayDatos = false;
+let datosDeCache = false;
+let ultimaActualizacion = 0;
+let controladorActual = null;
+
+function leerGuardado(clave) {
+    try {
+        return localStorage.getItem(clave);
+    } catch (error) {
+        return null;
+    }
+}
+
+function escribirGuardado(clave, valor) {
+    try {
+        localStorage.setItem(clave, valor);
+    } catch (error) {
+        // Modo privado o sin espacio: la app funciona igual, sin recordar.
+    }
+}
+
+function leerJSONGuardado(clave) {
+    try {
+        const texto = leerGuardado(clave);
+
+        return texto ? JSON.parse(texto) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function normalizar(texto) {
+    return String(texto || "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase()
+        .trim();
+}
+
+function describirAntiguedad(instante) {
+    const minutos = Math.max(
+        0,
+        Math.round((Date.now() - instante) / 60000)
+    );
+
+    if (minutos < 60) {
+        return `hace ${Math.max(1, minutos)} min`;
+    }
+
+    const horas = Math.round(minutos / 60);
+
+    if (horas < 24) {
+        return `hace ${horas} h`;
+    }
+
+    return `hace ${Math.round(horas / 24)} d`;
+}
+
+async function pedirJSON(url, signal, mensajeFallo) {
+    let respuesta;
+
+    try {
+        respuesta = await fetch(url, { signal });
+    } catch (error) {
+        if (error.name === "AbortError") {
+            throw error;
+        }
+
+        throw new ErrorAplicacion("Sin conexión a internet.");
+    }
+
+    if (!respuesta.ok) {
+        throw new ErrorAplicacion(mensajeFallo);
+    }
+
+    return respuesta.json();
+}
+
+// "Leganés, Madrid": la API busca por nombre, así que lo que va después de la
+// coma se usa para elegir entre ciudades con el mismo nombre.
+function elegirLugar(resultados, calificador) {
+    if (calificador) {
+        const coincidencia = resultados.find(lugar =>
+            normalizar(
+                [
+                    lugar.admin1,
+                    lugar.admin2,
+                    lugar.admin3,
+                    lugar.country,
+                    lugar.country_code
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+            ).includes(calificador)
         );
 
-        if (!respuestaCiudad.ok) {
-            throw new Error("No se ha podido buscar la ciudad.");
+        if (coincidencia) {
+            return coincidencia;
         }
-
-        const datosCiudad = await respuestaCiudad.json();
-
-        if (!datosCiudad.results || datosCiudad.results.length === 0) {
-            throw new Error("No se ha encontrado esa ciudad.");
-        }
-
-        const lugar = datosCiudad.results[0];
-
-        const url =
-            `https://api.open-meteo.com/v1/forecast?` +
-            `latitude=${lugar.latitude}` +
-            `&longitude=${lugar.longitude}` +
-            `&current=` +
-            `temperature_2m,` +
-            `relative_humidity_2m,` +
-            `apparent_temperature,` +
-            `is_day,` +
-            `precipitation,` +
-            `weather_code,` +
-            `cloud_cover,` +
-            `pressure_msl,` +
-            `wind_speed_10m,` +
-            `wind_direction_10m,` +
-            `wind_gusts_10m,` +
-            `visibility` +
-            `&hourly=` +
-            `temperature_2m,` +
-            `apparent_temperature,` +
-            `precipitation_probability,` +
-            `weather_code,` +
-            `is_day` +
-            `&daily=` +
-            `weather_code,` +
-            `temperature_2m_max,` +
-            `temperature_2m_min,` +
-            `precipitation_probability_max,` +
-            `precipitation_sum,` +
-            `precipitation_hours,` +
-            `sunrise,` +
-            `sunset` +
-            `&timezone=auto` +
-            `&forecast_days=7`;
-
-        const respuestaTiempo = await fetch(url);
-
-        if (!respuestaTiempo.ok) {
-            throw new Error("No se ha podido obtener el tiempo.");
-        }
-
-        const datos = await respuestaTiempo.json();
-
-        mostrarTiempo(lugar, datos);
-
-    } catch (error) {
-        mostrarError(error.message);
     }
+
+    return resultados[0];
+}
+
+async function geocodificar(texto, signal) {
+    const [nombre, ...resto] = texto.split(",");
+    const buscado = nombre.trim();
+    const calificador = normalizar(resto.join(" "));
+
+    if (buscado === "") {
+        throw new ErrorAplicacion("No se ha encontrado esa ciudad.");
+    }
+
+    const datos = await pedirJSON(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(buscado)}&count=10&language=es&format=json`,
+        signal,
+        "No se ha podido buscar la ciudad."
+    );
+
+    if (!datos.results || datos.results.length === 0) {
+        throw new ErrorAplicacion("No se ha encontrado esa ciudad.");
+    }
+
+    return elegirLugar(datos.results, calificador);
+}
+
+async function cargarTiempo(lugar, signal) {
+    const url =
+        `https://api.open-meteo.com/v1/forecast?` +
+        `latitude=${lugar.latitude}` +
+        `&longitude=${lugar.longitude}` +
+        `&current=` +
+        `temperature_2m,` +
+        `relative_humidity_2m,` +
+        `apparent_temperature,` +
+        `is_day,` +
+        `precipitation,` +
+        `weather_code,` +
+        `cloud_cover,` +
+        `pressure_msl,` +
+        `wind_speed_10m,` +
+        `wind_direction_10m,` +
+        `wind_gusts_10m,` +
+        `visibility` +
+        `&hourly=` +
+        `temperature_2m,` +
+        `apparent_temperature,` +
+        `precipitation_probability,` +
+        `weather_code,` +
+        `is_day` +
+        `&daily=` +
+        `weather_code,` +
+        `temperature_2m_max,` +
+        `temperature_2m_min,` +
+        `precipitation_probability_max,` +
+        `precipitation_sum,` +
+        `precipitation_hours,` +
+        `sunrise,` +
+        `sunset` +
+        `&timezone=auto` +
+        `&forecast_days=7`;
+
+    const datos = await pedirJSON(
+        url,
+        signal,
+        "No se ha podido obtener el tiempo."
+    );
+
+    mostrarTiempo(lugar, datos);
+
+    lugarActual = {
+        name: lugar.name,
+        latitude: lugar.latitude,
+        longitude: lugar.longitude
+    };
+
+    hayDatos = true;
+    datosDeCache = false;
+    ultimaActualizacion = Date.now();
+
+    mostrarError("");
+
+    // Copia para arrancar al instante y para cuando no haya conexión.
+    escribirGuardado(
+        CLAVE_ULTIMO,
+        JSON.stringify({
+            lugar: lugarActual,
+            datos,
+            guardadoEn: ultimaActualizacion
+        })
+    );
+}
+
+function pintarGuardado(guardado) {
+    try {
+        mostrarTiempo(guardado.lugar, guardado.datos);
+    } catch (error) {
+        console.error("Los datos guardados no son válidos:", error);
+        return false;
+    }
+
+    lugarActual = guardado.lugar;
+    hayDatos = true;
+    datosDeCache = true;
+    ultimaActualizacion = Number(guardado.guardadoEn) || 0;
+
+    return true;
+}
+
+function tratarError(error, agotado, silenciosa) {
+    if (silenciosa) {
+        console.log("No se ha podido actualizar:", error);
+        return;
+    }
+
+    let mensaje;
+
+    if (agotado) {
+        mensaje = "La conexión va muy lenta. Inténtalo de nuevo.";
+    } else if (error instanceof ErrorAplicacion) {
+        mensaje = error.message;
+    } else {
+        console.error(error);
+        mensaje = "Algo ha fallado al mostrar el tiempo.";
+    }
+
+    if (datosDeCache) {
+        mensaje += ` Mostrando datos de ${describirAntiguedad(ultimaActualizacion)}.`;
+    }
+
+    mostrarError(mensaje);
+}
+
+// Ejecuta una tarea de red cancelando la anterior (para que una respuesta
+// lenta no pise a una búsqueda más reciente) y con un tiempo máximo.
+async function conControl(tarea, { silenciosa = false } = {}) {
+    if (controladorActual) {
+        controladorActual.abort();
+    }
+
+    const controlador = new AbortController();
+
+    controladorActual = controlador;
+
+    let agotado = false;
+
+    const temporizador = setTimeout(() => {
+        agotado = true;
+        controlador.abort();
+    }, TIEMPO_MAXIMO_MS);
+
+    try {
+        if (!silenciosa) {
+            mostrarError("");
+        }
+
+        await tarea(controlador.signal);
+    } catch (error) {
+        // Cancelada por otra búsqueda más nueva: no hay nada que contar.
+        if (error.name === "AbortError" && !agotado) {
+            return;
+        }
+
+        tratarError(error, agotado, silenciosa);
+    } finally {
+        clearTimeout(temporizador);
+
+        if (controladorActual === controlador) {
+            controladorActual = null;
+        }
+    }
+}
+
+function buscarCiudad(ciudad) {
+    return conControl(async signal => {
+        const lugar = await geocodificar(ciudad, signal);
+
+        await cargarTiempo(lugar, signal);
+
+        escribirGuardado(CLAVE_CIUDAD, ciudad);
+    });
+}
+
+function refrescarSiHaceFalta(minimoMs) {
+    if (!lugarActual || controladorActual) {
+        return;
+    }
+
+    if (Date.now() - ultimaActualizacion < minimoMs) {
+        return;
+    }
+
+    conControl(
+        signal => cargarTiempo(lugarActual, signal),
+        { silenciosa: true }
+    );
 }
 
 function mostrarTiempo(lugar, datos) {
@@ -192,7 +433,7 @@ function mostrarTiempo(lugar, datos) {
     poner("amanecer", formatearHora(diario.sunrise[0]));
     poner("atardecer", formatearHora(diario.sunset[0]));
 
-    actualizarFecha();
+    actualizarFecha(datos.timezone);
 
     cambiarAmbiente(
         informacion[2],
@@ -562,20 +803,28 @@ function formatearHora(fecha) {
     return typeof fecha === "string" ? fecha.slice(11, 16) : "--:--";
 }
 
-function actualizarFecha() {
-    const ahora =
-        new Date();
+function actualizarFecha(zona) {
+    const opciones = {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+    };
 
-    document.getElementById("fecha")
-        .textContent =
-        ahora.toLocaleDateString(
+    const ahora = new Date();
+
+    let texto;
+
+    try {
+        // Fecha en la zona horaria de la ciudad, no la del dispositivo.
+        texto = ahora.toLocaleDateString(
             "es-ES",
-            {
-                weekday: "long",
-                day: "numeric",
-                month: "long"
-            }
+            zona ? { ...opciones, timeZone: zona } : opciones
         );
+    } catch (error) {
+        texto = ahora.toLocaleDateString("es-ES", opciones);
+    }
+
+    poner("fecha", texto);
 }
 
 function mostrarError(mensaje) {
@@ -736,6 +985,47 @@ setInterval(
     7000
 );
 
-buscarCiudad(
-    "Leganés, Madrid"
+const ciudadGuardada = leerGuardado(CLAVE_CIUDAD);
+
+if (ciudadGuardada) {
+    document.getElementById("ciudad").value = ciudadGuardada;
+}
+
+const ultimoGuardado = leerJSONGuardado(CLAVE_ULTIMO);
+
+if (
+    ultimoGuardado &&
+    ultimoGuardado.lugar &&
+    ultimoGuardado.datos &&
+    pintarGuardado(ultimoGuardado)
+) {
+    // Primer pintado inmediato con lo último que se vio; después, datos frescos.
+    conControl(
+        signal => cargarTiempo(ultimoGuardado.lugar, signal)
+    );
+} else {
+    buscarCiudad(ciudadGuardada || CIUDAD_POR_DEFECTO);
+}
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+        if (document.visibilityState === "visible") {
+            refrescarSiHaceFalta(REFRESCO_AL_VOLVER_MS);
+        }
+    }
+);
+
+window.addEventListener(
+    "online",
+    () => refrescarSiHaceFalta(0)
+);
+
+setInterval(
+    () => {
+        if (document.visibilityState === "visible") {
+            refrescarSiHaceFalta(REFRESCO_PERIODICO_MS);
+        }
+    },
+    COMPROBACION_MS
 );
