@@ -152,6 +152,18 @@ body.noche {
     display: block;
 }
 
+.campo-busqueda {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 8px 8px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    background: var(--cristal);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
 .campo-busqueda input {
     flex: 1;
     min-width: 0;
@@ -160,23 +172,13 @@ body.noche {
     color: white;
     background: transparent;
     font: inherit;
+    /* 16px como mínimo: por debajo, iOS hace zoom al enfocar el campo */
     font-size: 16px;
 }
 
 .campo-busqueda > span {
     font-size: 20px;
     opacity: 0.8;
-}
-
-.campo-busqueda input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    outline: none;
-    color: white;
-    background: transparent;
-    font: inherit;
-    font-size: 15px;
 }
 
 .campo-busqueda input::placeholder {
@@ -189,6 +191,8 @@ body.noche {
     border-radius: 12px;
     color: #243041;
     background: white;
+    font-family: inherit;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
 }

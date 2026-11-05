@@ -18,7 +18,7 @@ const clima = {
     71: ["Nieve ligera", "❄", "nieve"],
     73: ["Nieve", "❄", "nieve"],
     75: ["Nieve intensa", "❄", "nieve"],
-    77: ["Granizo", "❄", "nieve"],
+    77: ["Granos de nieve", "❄", "nieve"],
     80: ["Chubascos ligeros", "☂", "lluvia"],
     81: ["Chubascos", "☂", "lluvia"],
     82: ["Chubascos intensos", "☂", "tormenta"],
@@ -74,6 +74,28 @@ let videoActual = "";
 let indiceFrase = Math.floor(
     Math.random() * frasesAmor.length
 );
+
+function poner(id, texto) {
+    document.getElementById(id).textContent = texto;
+}
+
+// La API puede devolver null en algunos campos: se muestra un guion
+// en lugar de "NaN", "null%" o un 0 inventado.
+function formatearNumero(valor, sufijo = "", vacio = null) {
+    if (typeof valor === "number" && Number.isFinite(valor)) {
+        return `${Math.round(valor)}${sufijo}`;
+    }
+
+    return vacio !== null ? vacio : `--${sufijo}`;
+}
+
+function formatearKilometros(metros) {
+    if (typeof metros === "number" && Number.isFinite(metros)) {
+        return `${(metros / 1000).toFixed(1)} km`;
+    }
+
+    return "-- km";
+}
 
 async function buscarCiudad(ciudad) {
     try {
@@ -150,54 +172,25 @@ function mostrarTiempo(lugar, datos) {
     const diario = datos.daily;
     const horario = datos.hourly;
 
-    const codigo = actual.weather_code;
-
     const informacion = obtenerInformacionClima(
-        codigo,
+        actual.weather_code,
         actual.is_day
     );
 
-    document.getElementById("nombreCiudad").textContent =
-        lugar.name;
-
-    document.getElementById("temperatura").textContent =
-        `${Math.round(actual.temperature_2m)}°`;
-
-    document.getElementById("descripcion").textContent =
-        informacion[0];
-
-    document.getElementById("sensacion").textContent =
-        `${Math.round(actual.apparent_temperature)}°`;
-
-    document.getElementById("humedad").textContent =
-        `${actual.relative_humidity_2m}%`;
-
-    document.getElementById("viento").textContent =
-        `${Math.round(actual.wind_speed_10m)} km/h`;
-
-    document.getElementById("direccionViento").textContent =
-        obtenerDireccionViento(actual.wind_direction_10m);
-
-    document.getElementById("rachas").textContent =
-        `${Math.round(actual.wind_gusts_10m)} km/h`;
-
-    document.getElementById("visibilidad").textContent =
-        `${(actual.visibility / 1000).toFixed(1)} km`;
-
-    document.getElementById("presion").textContent =
-        `${Math.round(actual.pressure_msl)} hPa`;
-
-    document.getElementById("maxima").textContent =
-        `${Math.round(diario.temperature_2m_max[0])}°`;
-
-    document.getElementById("minima").textContent =
-        `${Math.round(diario.temperature_2m_min[0])}°`;
-
-    document.getElementById("amanecer").textContent =
-        formatearHora(diario.sunrise[0]);
-
-    document.getElementById("atardecer").textContent =
-        formatearHora(diario.sunset[0]);
+    poner("nombreCiudad", lugar.name);
+    poner("temperatura", formatearNumero(actual.temperature_2m, "°"));
+    poner("descripcion", informacion[0]);
+    poner("sensacion", formatearNumero(actual.apparent_temperature, "°"));
+    poner("humedad", formatearNumero(actual.relative_humidity_2m, "%"));
+    poner("viento", formatearNumero(actual.wind_speed_10m, " km/h"));
+    poner("direccionViento", obtenerDireccionViento(actual.wind_direction_10m));
+    poner("rachas", formatearNumero(actual.wind_gusts_10m, " km/h"));
+    poner("visibilidad", formatearKilometros(actual.visibility));
+    poner("presion", formatearNumero(actual.pressure_msl, " hPa"));
+    poner("maxima", formatearNumero(diario.temperature_2m_max[0], "°"));
+    poner("minima", formatearNumero(diario.temperature_2m_min[0], "°"));
+    poner("amanecer", formatearHora(diario.sunrise[0]));
+    poner("atardecer", formatearHora(diario.sunset[0]));
 
     actualizarFecha();
 
@@ -206,10 +199,7 @@ function mostrarTiempo(lugar, datos) {
         actual.is_day
     );
 
-    mostrarHoras(
-        horario,
-        actual.time
-    );
+    mostrarHoras(horario, actual);
 
     mostrarPrevision(diario);
 }
@@ -240,63 +230,54 @@ function obtenerInformacionClima(codigo, esDeDia) {
     return informacion;
 }
 
-function mostrarHoras(horario, horaActual) {
-    const contenedor =
-        document.getElementById("horas");
+function mostrarHoras(horario, actual) {
+    const contenedor = document.getElementById("horas");
 
     contenedor.innerHTML = "";
 
-    let indiceActual =
-        horario.time.findIndex(
-            hora => hora >= horaActual
-        );
+    // La API da la hora actual con minutos (09:15) y las franjas en punto
+    // (09:00). Se redondea hacia abajo para que "Ahora" sea la franja en curso
+    // y no la siguiente.
+    const horaEnPunto = actual.time.slice(0, 13) + ":00";
+
+    let indiceActual = horario.time.findIndex(
+        hora => hora >= horaEnPunto
+    );
 
     if (indiceActual === -1) {
         indiceActual = 0;
     }
 
-    const limite =
-        Math.min(
-            indiceActual + 12,
-            horario.time.length
+    const limite = Math.min(
+        indiceActual + 12,
+        horario.time.length
+    );
+
+    for (let i = indiceActual; i < limite; i++) {
+        const esAhora = i === indiceActual;
+
+        // Para "Ahora" se usan los valores reales del momento, que coinciden
+        // con el dato grande de arriba.
+        const informacion = obtenerInformacionClima(
+            esAhora ? actual.weather_code : horario.weather_code[i],
+            esAhora ? actual.is_day : horario.is_day[i]
         );
 
-    for (
-        let i = indiceActual;
-        i < limite;
-        i++
-    ) {
-        const codigo =
-            horario.weather_code[i];
+        const temperatura = esAhora
+            ? actual.temperature_2m
+            : horario.temperature_2m[i];
 
-        const esDeDia =
-            horario.is_day[i];
+        const div = document.createElement("div");
 
-        const informacion =
-            obtenerInformacionClima(
-                codigo,
-                esDeDia
-            );
+        div.className = "hora";
 
-        const hora =
-            horario.time[i].slice(11, 16);
-
-        const probabilidad =
-            horario.precipitation_probability[i];
-
-        const div =
-            document.createElement("div");
-
-        div.className =
-            "hora";
-
-        if (i === indiceActual) {
+        if (esAhora) {
             div.classList.add("actual");
         }
 
         div.innerHTML = `
             <span class="hora-nombre">
-                ${i === indiceActual ? "Ahora" : hora}
+                ${esAhora ? "Ahora" : horario.time[i].slice(11, 16)}
             </span>
 
             <span class="hora-icono">
@@ -304,59 +285,40 @@ function mostrarHoras(horario, horaActual) {
             </span>
 
             <span class="hora-temperatura">
-                ${Math.round(horario.temperature_2m[i])}°
+                ${formatearNumero(temperatura, "°")}
             </span>
 
             <span class="hora-lluvia">
-                ${probabilidad}%
+                ${formatearNumero(horario.precipitation_probability[i], "%", "–")}
             </span>
         `;
 
         contenedor.appendChild(div);
     }
 
-    document.getElementById("horaActual").textContent =
-        horario.time[indiceActual].slice(11, 16);
+    poner("horaActual", actual.time.slice(11, 16));
 }
 
 function mostrarPrevision(diario) {
-    const contenedor =
-        document.getElementById("prevision");
+    const contenedor = document.getElementById("prevision");
 
     contenedor.innerHTML = "";
 
-    for (
-        let i = 0;
-        i < diario.time.length;
-        i++
-    ) {
-        const codigo =
-            diario.weather_code[i];
-
+    for (let i = 0; i < diario.time.length; i++) {
         const informacion =
-            clima[codigo] ||
+            clima[diario.weather_code[i]] ||
             ["Desconocido", "•", "nublado"];
 
-        const fecha =
-            new Date(
-                diario.time[i] + "T12:00:00"
-            );
+        const fecha = new Date(diario.time[i] + "T12:00:00");
 
         const nombre =
             i === 0
                 ? "Hoy"
-                : fecha.toLocaleDateString(
-                    "es-ES",
-                    {
-                        weekday: "short"
-                    }
-                );
+                : fecha.toLocaleDateString("es-ES", { weekday: "short" });
 
-        const div =
-            document.createElement("div");
+        const div = document.createElement("div");
 
-        div.className =
-            "dia";
+        div.className = "dia";
 
         div.innerHTML = `
             <span class="dia-nombre">
@@ -369,20 +331,16 @@ function mostrarPrevision(diario) {
 
             <div class="dia-temperaturas">
                 <span class="dia-max">
-                    ${Math.round(
-                        diario.temperature_2m_max[i]
-                    )}°
+                    ${formatearNumero(diario.temperature_2m_max[i], "°")}
                 </span>
 
                 <span class="dia-min">
-                    ${Math.round(
-                        diario.temperature_2m_min[i]
-                    )}°
+                    ${formatearNumero(diario.temperature_2m_min[i], "°")}
                 </span>
             </div>
 
             <span class="dia-lluvia">
-                ${diario.precipitation_probability_max[i]}%
+                ${formatearNumero(diario.precipitation_probability_max[i], "%", "–")}
                 lluvia
             </span>
         `;
@@ -580,6 +538,10 @@ document.addEventListener(
 );
 
 function obtenerDireccionViento(grados) {
+    if (typeof grados !== "number" || !Number.isFinite(grados)) {
+        return "--";
+    }
+
     const direcciones = [
         "N",
         "NE",
@@ -591,16 +553,13 @@ function obtenerDireccionViento(grados) {
         "NO"
     ];
 
-    const indice =
-        Math.round(
-            grados / 45
-        ) % 8;
+    const indice = Math.round(grados / 45) % 8;
 
     return `${direcciones[indice]} · ${Math.round(grados)}°`;
 }
 
 function formatearHora(fecha) {
-    return fecha.slice(11, 16);
+    return typeof fecha === "string" ? fecha.slice(11, 16) : "--:--";
 }
 
 function actualizarFecha() {
