@@ -126,7 +126,11 @@ body.noche {
     margin-top: 3px;
     font-size: 13px;
     color: var(--texto-suave);
-    text-transform: capitalize;
+}
+
+/* Solo la primera letra: "jueves, 5 de noviembre" -> "Jueves, 5 de noviembre" */
+.fecha::first-letter {
+    text-transform: uppercase;
 }
 
 .boton-busqueda {
