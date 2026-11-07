@@ -110,7 +110,6 @@ const COMPROBACION_MS = 5 * 60 * 1000;
 class ErrorAplicacion extends Error {}
 
 let lugarActual = null;
-let hayDatos = false;
 let datosDeCache = false;
 let ultimaActualizacion = 0;
 let controladorActual = null;
@@ -246,9 +245,7 @@ async function cargarTiempo(lugar, signal) {
         `relative_humidity_2m,` +
         `apparent_temperature,` +
         `is_day,` +
-        `precipitation,` +
         `weather_code,` +
-        `cloud_cover,` +
         `pressure_msl,` +
         `wind_speed_10m,` +
         `wind_direction_10m,` +
@@ -256,7 +253,6 @@ async function cargarTiempo(lugar, signal) {
         `visibility` +
         `&hourly=` +
         `temperature_2m,` +
-        `apparent_temperature,` +
         `precipitation_probability,` +
         `weather_code,` +
         `is_day` +
@@ -265,8 +261,6 @@ async function cargarTiempo(lugar, signal) {
         `temperature_2m_max,` +
         `temperature_2m_min,` +
         `precipitation_probability_max,` +
-        `precipitation_sum,` +
-        `precipitation_hours,` +
         `sunrise,` +
         `sunset` +
         `&timezone=auto` +
@@ -286,7 +280,6 @@ async function cargarTiempo(lugar, signal) {
         longitude: lugar.longitude
     };
 
-    hayDatos = true;
     datosDeCache = false;
     ultimaActualizacion = Date.now();
 
@@ -312,7 +305,6 @@ function pintarGuardado(guardado) {
     }
 
     lugarActual = guardado.lugar;
-    hayDatos = true;
     datosDeCache = true;
     ultimaActualizacion = Number(guardado.guardadoEn) || 0;
 
@@ -617,129 +609,23 @@ function cambiarAmbiente(tipo, esDeDia) {
     );
 }
 
-function cambiarVideo(tipo) {
-    const video =
-        document.getElementById(
-            "fondoVideo"
-        );
+const OPACIDAD_VIDEO = "0.72";
+const VELOCIDAD_VIDEO = 0.5;
 
-    const nuevoVideo =
-        videos[tipo];
-
-    if (!nuevoVideo) {
-        return;
-    }
-
-    if (videoActual === nuevoVideo) {
-        return;
-    }
-
-    videoActual =
-        nuevoVideo;
-
-    video.pause();
-
-    video.muted = true;
-    video.defaultMuted = true;
-    video.autoplay = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.setAttribute(
-        "playsinline",
-        ""
-    );
-
-    video.playbackRate =
-        0.5;
-
-    video.style.opacity =
-        "0";
-
-    video.src =
-        nuevoVideo;
-
-    video.load();
-    video.playbackRate = 0.5;
-
-    const mostrarVideo = () => {
-        video.style.opacity =
-            "0.72";
-
-        video.playbackRate =
-            0.5;
-    };
-
-    const reproducirVideo = () => {
-        video.muted = true;
-        video.defaultMuted = true;
-        video.playbackRate = 0.5;
-
-        const reproduccion =
-            video.play();
-
-        if (
-            reproduccion &&
-            typeof reproduccion.catch === "function"
-        ) {
-            reproduccion
-                .then(() => {
-                    mostrarVideo();
-                })
-                .catch(error => {
-                    console.log(
-                        "Autoplay bloqueado:",
-                        error
-                    );
-
-                    if (
-                        video.readyState >= 2
-                    ) {
-                        mostrarVideo();
-                    }
-                });
-        }
-    };
-
-    video.onloadeddata =
-        () => {
-            mostrarVideo();
-            reproducirVideo();
-        };
-
-    video.oncanplay =
-        () => {
-            mostrarVideo();
-            reproducirVideo();
-        };
-
-    video.onplaying =
-        () => {
-            mostrarVideo();
-        };
-
-    video.onerror =
-        () => {
-            console.error(
-                "No se ha podido cargar el vídeo:",
-                nuevoVideo
-            );
-        };
-
-    setTimeout(() => {
-        if (
-            video.readyState >= 2
-        ) {
-            mostrarVideo();
-            reproducirVideo();
-        }
-    }, 500);
+function obtenerVideo() {
+    return document.getElementById("fondoVideo");
 }
 
-function activarVideo() {
-    const video =
-        document.getElementById(
-            "fondoVideo"
-        );
+function movimientoReducido() {
+    return (
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+}
+
+// Atributos que antes se repetían en cada cambio de vídeo: basta con una vez.
+function prepararVideo() {
+    const video = obtenerVideo();
 
     if (!video) {
         return;
@@ -747,27 +633,75 @@ function activarVideo() {
 
     video.muted = true;
     video.defaultMuted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute("playsinline", "");
 
-    video.play()
-        .then(() => {
-            video.style.opacity =
-                "0.72";
-
-            video.playbackRate =
-                0.5;
-        })
-        .catch(() => {
-        });
+    // load() restablece la velocidad a la "por defecto", así que se fija ahí.
+    video.defaultPlaybackRate = VELOCIDAD_VIDEO;
+    video.playbackRate = VELOCIDAD_VIDEO;
 }
 
-document.addEventListener(
-    "touchstart",
-    activarVideo,
-    {
-        once: true,
-        passive: true
+// Con la app en segundo plano o con "reducir movimiento" el vídeo no corre:
+// ahorra batería y respeta la preferencia (se queda en su primer fotograma).
+function reproducirVideo() {
+    const video = obtenerVideo();
+
+    if (
+        !video ||
+        document.visibilityState === "hidden" ||
+        movimientoReducido()
+    ) {
+        return;
     }
-);
+
+    video.muted = true;
+
+    const reproduccion = video.play();
+
+    if (reproduccion && typeof reproduccion.catch === "function") {
+        // Autoplay bloqueado (p. ej. ahorro de batería en iOS): se reintenta
+        // con el primer toque, ver activarVideo().
+        reproduccion.catch(() => {});
+    }
+}
+
+function pausarVideo() {
+    const video = obtenerVideo();
+
+    if (video) {
+        video.pause();
+    }
+}
+
+function cambiarVideo(tipo) {
+    const video = obtenerVideo();
+    const nuevoVideo = videos[tipo];
+
+    if (!video || !nuevoVideo || videoActual === nuevoVideo) {
+        return;
+    }
+
+    videoActual = nuevoVideo;
+
+    video.style.opacity = "0";
+
+    video.onloadeddata = () => {
+        video.style.opacity = OPACIDAD_VIDEO;
+        reproducirVideo();
+    };
+
+    video.onerror = () => {
+        console.error("No se ha podido cargar el vídeo:", nuevoVideo);
+    };
+
+    video.src = nuevoVideo;
+    video.load();
+}
+
+function activarVideo() {
+    reproducirVideo();
+}
 
 document.addEventListener(
     "pointerdown",
@@ -777,6 +711,8 @@ document.addEventListener(
         passive: true
     }
 );
+
+prepararVideo();
 
 function obtenerDireccionViento(grados) {
     if (typeof grados !== "number" || !Number.isFinite(grados)) {
@@ -1011,7 +947,10 @@ document.addEventListener(
     "visibilitychange",
     () => {
         if (document.visibilityState === "visible") {
+            reproducirVideo();
             refrescarSiHaceFalta(REFRESCO_AL_VOLVER_MS);
+        } else {
+            pausarVideo();
         }
     }
 );
