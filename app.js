@@ -513,7 +513,7 @@ function mostrarHoras(horario, actual) {
                 ${esAhora ? "Ahora" : horario.time[i].slice(11, 16)}
             </span>
 
-            <span class="hora-icono">
+            <span class="hora-icono" role="img" aria-label="${informacion[0]}">
                 ${informacion[1]}
             </span>
 
@@ -558,7 +558,7 @@ function mostrarPrevision(diario) {
                 ${nombre}
             </span>
 
-            <span class="dia-icono">
+            <span class="dia-icono" role="img" aria-label="${informacion[0]}">
                 ${informacion[1]}
             </span>
 
@@ -633,6 +633,9 @@ function prepararVideo() {
 
     video.muted = true;
     video.defaultMuted = true;
+    // El arranque lo decide reproducirVideo(): el atributo autoplay del HTML
+    // ignoraría "reducir movimiento" y la app en segundo plano.
+    video.autoplay = false;
     video.loop = true;
     video.playsInline = true;
     video.setAttribute("playsinline", "");
@@ -824,70 +827,58 @@ function siguienteFrase() {
     }, 450);
 }
 
-document.getElementById(
-    "buscar"
-).addEventListener(
+const botonAbrirBusqueda = document.getElementById("abrirBusqueda");
+const panelBusqueda = document.getElementById("busqueda");
+const campoCiudad = document.getElementById("ciudad");
+
+function abrirBusqueda() {
+    panelBusqueda.classList.add("visible");
+    botonAbrirBusqueda.setAttribute("aria-expanded", "true");
+    campoCiudad.focus();
+}
+
+function cerrarBusqueda() {
+    panelBusqueda.classList.remove("visible");
+    botonAbrirBusqueda.setAttribute("aria-expanded", "false");
+
+    // El foco vuelve al botón que abrió el panel (si no, se pierde al ocultarlo).
+    botonAbrirBusqueda.focus();
+}
+
+botonAbrirBusqueda.addEventListener("click", abrirBusqueda);
+
+document.getElementById("cerrarBusqueda").addEventListener("click", cerrarBusqueda);
+
+document.getElementById("buscar").addEventListener(
     "click",
     () => {
-        const ciudad =
-            document.getElementById(
-                "ciudad"
-            ).value.trim();
+        const ciudad = campoCiudad.value.trim();
 
         if (ciudad !== "") {
             buscarCiudad(ciudad);
-
-            document.getElementById(
-                "busqueda"
-            ).classList.remove(
-                "visible"
-            );
+            cerrarBusqueda();
         }
     }
 );
 
-document.getElementById(
-    "ciudad"
-).addEventListener(
+campoCiudad.addEventListener(
+    "keydown",
+    event => {
+        if (event.key === "Enter") {
+            document.getElementById("buscar").click();
+        }
+    }
+);
+
+document.addEventListener(
     "keydown",
     event => {
         if (
-            event.key === "Enter"
+            event.key === "Escape" &&
+            panelBusqueda.classList.contains("visible")
         ) {
-            document.getElementById(
-                "buscar"
-            ).click();
+            cerrarBusqueda();
         }
-    }
-);
-
-document.getElementById(
-    "abrirBusqueda"
-).addEventListener(
-    "click",
-    () => {
-        document.getElementById(
-            "busqueda"
-        ).classList.add(
-            "visible"
-        );
-
-        document.getElementById(
-            "ciudad"
-        ).focus();
-    }
-);
-
-document.getElementById(
-    "cerrarBusqueda"
-).addEventListener(
-    "click",
-    () => {
-        document.getElementById(
-            "busqueda"
-        ).classList.remove(
-            "visible"
-        );
     }
 );
 

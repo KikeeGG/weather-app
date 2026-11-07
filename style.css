@@ -8,7 +8,7 @@
     --cristal: rgba(255, 255, 255, 0.14);
     --borde: rgba(255, 255, 255, 0.18);
     --texto: #ffffff;
-    --texto-suave: rgba(255, 255, 255, 0.68);
+    --texto-suave: rgba(255, 255, 255, 0.82);
     --sombra: rgba(0, 0, 0, 0.18);
     --rojo-ultima-hora: #ff4f73;
 }
@@ -129,8 +129,8 @@ body.noche {
 }
 
 .boton-busqueda {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     border: 1px solid var(--borde);
     border-radius: 50%;
     color: white;
@@ -185,6 +185,7 @@ body.noche {
 }
 
 .campo-busqueda button {
+    min-height: 40px;
     padding: 9px 13px;
     border: none;
     border-radius: 12px;
@@ -197,7 +198,9 @@ body.noche {
 }
 
 .cerrar-busqueda {
-    margin-top: 8px;
+    min-height: 44px;
+    margin-top: 2px;
+    padding: 0 6px;
     border: none;
     color: white;
     background: transparent;
@@ -341,7 +344,7 @@ body.noche {
     align-items: center;
     padding: 0 5px 9px;
     color: rgba(255, 255, 255, 0.75);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.7px;
 }
@@ -407,7 +410,7 @@ body.noche {
     display: block;
     margin-top: 5px;
     color: #d5f1ff;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .datos {
@@ -445,7 +448,7 @@ body.noche {
     display: block;
     margin-top: 4px;
     color: var(--texto-suave);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .sol {
@@ -485,7 +488,7 @@ body.noche {
     display: block;
     margin-bottom: 3px;
     color: var(--texto-suave);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .sol strong {
@@ -541,7 +544,7 @@ body.noche {
     display: block;
     margin-top: 8px;
     color: #d5f1ff;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 footer {
@@ -581,6 +584,17 @@ footer {
         opacity: 0;
         transform: translateX(-100%);
     }
+}
+
+button:focus-visible,
+.carrusel:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+.campo-busqueda:focus-within {
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 @media (min-width: 700px) {

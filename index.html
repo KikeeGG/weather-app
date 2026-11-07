@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#202b3d">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -25,6 +25,8 @@
         muted
         loop
         playsinline
+        disablepictureinpicture
+        aria-hidden="true"
         preload="metadata">
     </video>
 
@@ -39,7 +41,7 @@
                 <p class="fecha" id="fecha">Cargando...</p>
             </div>
 
-            <button class="boton-busqueda" id="abrirBusqueda" aria-label="Buscar ciudad">
+            <button class="boton-busqueda" id="abrirBusqueda" type="button" aria-label="Buscar ciudad" aria-expanded="false" aria-controls="busqueda">
                 ⌕
             </button>
 
@@ -48,20 +50,24 @@
         <section class="busqueda" id="busqueda">
 
             <div class="campo-busqueda">
-                <span>⌕</span>
+                <span aria-hidden="true">⌕</span>
 
                 <input
                     type="text"
                     id="ciudad"
+                    aria-label="Ciudad"
                     placeholder="Buscar ciudad..."
+                    autocomplete="off"
+                    spellcheck="false"
+                    enterkeyhint="search"
                     value="Leganés">
 
-                <button id="buscar">
+                <button id="buscar" type="button">
                     Buscar
                 </button>
             </div>
 
-            <button class="cerrar-busqueda" id="cerrarBusqueda">
+            <button class="cerrar-busqueda" id="cerrarBusqueda" type="button">
                 Cancelar
             </button>
 
@@ -82,7 +88,7 @@
 
         </section>
 
-        <p class="error" id="error"></p>
+        <p class="error" id="error" role="status" aria-live="polite"></p>
 
         <section class="principal">
 
@@ -118,7 +124,7 @@
                 <span id="horaActual"></span>
             </div>
 
-            <div class="carrusel horas" id="horas"></div>
+            <div class="carrusel horas" id="horas" role="region" aria-label="Previsión por horas" tabindex="0"></div>
 
         </section>
 
@@ -131,15 +137,15 @@
             <div class="datos">
 
                 <div class="dato">
-                    <span class="dato-icono">Temperatura</span>
+                    <span class="dato-icono">Sensación</span>
                     <strong id="sensacion">--°</strong>
-                    <small>Sensación</small>
+                    <small>Térmica</small>
                 </div>
 
                 <div class="dato">
                     <span class="dato-icono">Humedad</span>
                     <strong id="humedad">--%</strong>
-                    <small>Humedad</small>
+                    <small>Relativa</small>
                 </div>
 
                 <div class="dato">
@@ -179,7 +185,7 @@
             <div class="sol">
 
                 <div>
-                    <span class="sol-icono">↑</span>
+                    <span class="sol-icono" aria-hidden="true">↑</span>
 
                     <div>
                         <small>Amanecer</small>
@@ -188,7 +194,7 @@
                 </div>
 
                 <div>
-                    <span class="sol-icono">↓</span>
+                    <span class="sol-icono" aria-hidden="true">↓</span>
 
                     <div>
                         <small>Atardecer</small>
@@ -206,7 +212,7 @@
                 <span>PRÓXIMOS DÍAS</span>
             </div>
 
-            <div class="carrusel dias" id="prevision"></div>
+            <div class="carrusel dias" id="prevision" role="region" aria-label="Previsión de los próximos días" tabindex="0"></div>
 
         </section>
 
