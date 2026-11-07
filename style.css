@@ -362,56 +362,77 @@ body.noche {
     display: none;
 }
 
+.tarjeta {
+    border: 1px solid var(--borde);
+    border-radius: 20px;
+    background: var(--cristal);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 8px 30px var(--sombra);
+}
+
+.resumen-horas {
+    margin: 0 12px;
+    padding: 13px 4px 11px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+.resumen-horas:empty {
+    display: none;
+}
+
 .horas {
-    padding-left: 2px;
+    gap: 2px;
+    padding: 8px 8px 8px;
 }
 
 .hora {
-    flex: 0 0 70px;
-    padding: 13px 7px;
-    border: 1px solid var(--borde);
-    border-radius: 18px;
+    flex: 0 0 62px;
+    padding: 9px 4px 8px;
+    border-radius: 14px;
     text-align: center;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
     scroll-snap-align: start;
 }
 
 .hora.actual {
-    background: rgba(255, 255, 255, 0.23);
+    background: rgba(255, 255, 255, 0.17);
 }
 
 .hora-nombre {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     color: var(--texto-suave);
     font-size: 12px;
 }
 
 .hora.actual .hora-nombre {
     color: white;
+    font-weight: 600;
 }
 
 .hora-icono {
     display: block;
-    height: 28px;
-    margin-bottom: 9px;
-    font-size: 22px;
-    line-height: 28px;
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 4px;
 }
 
 .hora-temperatura {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 17px;
+    font-weight: 500;
 }
 
 .hora-lluvia {
     display: block;
-    margin-top: 5px;
-    color: #d5f1ff;
+    min-height: 16px;
+    margin-top: 3px;
+    color: #8fd8ff;
     font-size: 12px;
+    font-weight: 500;
 }
+
 
 .datos {
     display: grid;
@@ -428,6 +449,18 @@ body.noche {
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     box-shadow: 0 8px 30px var(--sombra);
+}
+
+.dato {
+    position: relative;
+}
+
+.grafico {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: block;
+    line-height: 0;
 }
 
 .dato-icono {
@@ -473,6 +506,23 @@ body.noche {
     border-left: 1px solid var(--borde);
 }
 
+.sol > .sol-arco {
+    display: block;
+    grid-column: 1 / -1;
+    padding: 14px 18px 4px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.sol > .sol-arco + div {
+    border-left: none;
+}
+
+.sol-arco svg {
+    display: block;
+    width: 100%;
+    max-height: 78px;
+}
+
 .sol-icono {
     display: flex;
     justify-content: center;
@@ -496,56 +546,102 @@ body.noche {
     font-weight: 500;
 }
 
-.dias {
-    gap: 9px;
+.lista-dias {
+    overflow: hidden;
 }
 
 .dia {
-    flex: 0 0 135px;
-    min-height: 145px;
-    padding: 15px;
-    border: 1px solid var(--borde);
-    border-radius: 19px;
-    background: var(--cristal);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    scroll-snap-align: start;
+    display: grid;
+    grid-template-columns: 44px 40px 34px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+}
+
+.dia + .dia {
+    border-top: 1px solid var(--borde);
 }
 
 .dia-nombre {
-    color: var(--texto-suave);
-    font-size: 12px;
+    font-size: 17px;
+    font-weight: 500;
     text-transform: capitalize;
 }
 
 .dia-icono {
-    display: block;
-    margin: 17px 0 12px;
-    font-size: 30px;
-}
-
-.dia-temperaturas {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
 }
 
+.dia-icono .icono-tiempo {
+    width: 30px;
+    height: 30px;
+}
+
+.dia-lluvia {
+    min-height: 12px;
+    margin-top: 1px;
+    color: #8fd8ff;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 12px;
+}
+
+.dia-min,
 .dia-max {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
 }
 
 .dia-min {
     color: var(--texto-suave);
-    font-size: 15px;
+    text-align: right;
 }
 
-.dia-lluvia {
-    display: block;
-    margin-top: 8px;
-    color: #d5f1ff;
-    font-size: 12px;
+.dia-max {
+    font-weight: 500;
+    text-align: left;
 }
+
+.barra-rango {
+    position: relative;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.barra-rango-relleno {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 3px;
+}
+
+.barra-rango-punto {
+    position: absolute;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border: 2px solid rgba(20, 28, 40, 0.6);
+    border-radius: 50%;
+    background: #ffffff;
+    transform: translate(-50%, -50%);
+}
+
+.defs-iconos {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.icono-tiempo {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 
 footer {
     padding: 28px 0 5px;

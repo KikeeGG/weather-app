@@ -1,11 +1,12 @@
 const PREFIJO_CACHE = "mi-tiempo-";
-const CACHE_NAME = `${PREFIJO_CACHE}v9`;
+const CACHE_NAME = `${PREFIJO_CACHE}v10`;
 
 const ARCHIVOS = [
     "./",
     "./index.html",
     "./style.css",
     "./app.js",
+    "./iconos.js",
     "./manifest.json",
     "./icon-180.png",
     "./icon-192.png",

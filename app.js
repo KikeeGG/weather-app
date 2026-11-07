@@ -243,6 +243,7 @@ async function cargarTiempo(lugar, signal) {
         `&current=` +
         `temperature_2m,` +
         `relative_humidity_2m,` +
+        `dew_point_2m,` +
         `apparent_temperature,` +
         `is_day,` +
         `weather_code,` +
@@ -264,7 +265,7 @@ async function cargarTiempo(lugar, signal) {
         `sunrise,` +
         `sunset` +
         `&timezone=auto` +
-        `&forecast_days=7`;
+        `&forecast_days=10`;
 
     const datos = await pedirJSON(
         url,
@@ -400,6 +401,68 @@ function refrescarSiHaceFalta(minimoMs) {
     );
 }
 
+function pintarGrafico(id, svg) {
+    document.getElementById(id).innerHTML = svg;
+}
+
+function describirPresion(hpa) {
+    if (!esNumero(hpa)) {
+        return "Atmosférica";
+    }
+
+    if (hpa < 1005) {
+        return "Baja";
+    }
+
+    return hpa > 1020 ? "Alta" : "Normal";
+}
+
+// Para el resumen, el cielo despejado y el parcialmente nublado cuentan como
+// lo mismo: así no se anuncia un "cambio" por una nube de más o de menos.
+const GRUPOS_TIEMPO = {
+    despejado: "despejado",
+    parcial: "despejado",
+    niebla: "niebla",
+    lluvia: "lluvia",
+    nieve: "nieve",
+    tormenta: "tormenta",
+    nublado: "nublado"
+};
+
+const NOMBRES_GRUPO = {
+    despejado: "Cielos poco nubosos",
+    niebla: "Niebla",
+    lluvia: "Lluvia",
+    nieve: "Nieve",
+    tormenta: "Tormentas",
+    nublado: "Nublado"
+};
+
+function resumenHoras(horario, actual, indiceActual) {
+    const descripcion = obtenerInformacionClima(
+        actual.weather_code,
+        actual.is_day
+    )[0];
+
+    const grupoAhora = GRUPOS_TIEMPO[tipoIcono(actual.weather_code)];
+
+    const limite = Math.min(indiceActual + 24, horario.time.length);
+
+    for (let i = indiceActual + 1; i < limite; i++) {
+        const grupo = GRUPOS_TIEMPO[tipoIcono(horario.weather_code[i])];
+
+        if (grupo !== grupoAhora) {
+            return (
+                `${descripcion} ahora. ` +
+                `${NOMBRES_GRUPO[grupo]} a partir de las ` +
+                `${horario.time[i].slice(11, 16)}.`
+            );
+        }
+    }
+
+    return `${descripcion} durante las próximas 24 horas.`;
+}
+
 function mostrarTiempo(lugar, datos) {
     const actual = datos.current;
     const diario = datos.daily;
@@ -420,6 +483,19 @@ function mostrarTiempo(lugar, datos) {
     poner("rachas", formatearNumero(actual.wind_gusts_10m, " km/h"));
     poner("visibilidad", formatearKilometros(actual.visibility));
     poner("presion", formatearNumero(actual.pressure_msl, " hPa"));
+    poner("estadoPresion", describirPresion(actual.pressure_msl));
+    poner(
+        "puntoRocio",
+        esNumero(actual.dew_point_2m)
+            ? `Punto de rocío ${formatearNumero(actual.dew_point_2m, "°")}`
+            : "Relativa"
+    );
+    pintarGrafico("brujula", brujulaViento(actual.wind_direction_10m));
+    pintarGrafico("medidorPresion", medidorPresion(actual.pressure_msl));
+    pintarGrafico(
+        "arcoSol",
+        arcoSol(actual.time, diario.sunrise[0], diario.sunset[0])
+    );
     poner("maxima", formatearNumero(diario.temperature_2m_max[0], "°"));
     poner("minima", formatearNumero(diario.temperature_2m_min[0], "°"));
     poner("amanecer", formatearHora(diario.sunrise[0]));
@@ -434,7 +510,7 @@ function mostrarTiempo(lugar, datos) {
 
     mostrarHoras(horario, actual);
 
-    mostrarPrevision(diario);
+    mostrarPrevision(diario, actual);
 }
 
 function obtenerInformacionClima(codigo, esDeDia) {
@@ -461,6 +537,47 @@ function obtenerInformacionClima(codigo, esDeDia) {
     }
 
     return informacion;
+}
+
+const ESCALA_TEMPERATURA = [
+    [-5, [90, 169, 255]],
+    [5, [76, 208, 224]],
+    [12, [123, 216, 143]],
+    [18, [228, 216, 76]],
+    [25, [255, 179, 71]],
+    [32, [255, 107, 74]],
+    [40, [229, 51, 74]]
+];
+
+function esNumero(valor) {
+    return typeof valor === "number" && Number.isFinite(valor);
+}
+
+// Color de la barra de temperatura: azul (frío) -> verde -> amarillo -> rojo.
+function colorTemperatura(grados) {
+    const primero = ESCALA_TEMPERATURA[0];
+    const ultimo = ESCALA_TEMPERATURA[ESCALA_TEMPERATURA.length - 1];
+
+    if (grados <= primero[0]) {
+        return `rgb(${primero[1].join(",")})`;
+    }
+
+    for (let i = 1; i < ESCALA_TEMPERATURA.length; i++) {
+        const [tope, destino] = ESCALA_TEMPERATURA[i];
+
+        if (grados <= tope) {
+            const [inicio, origen] = ESCALA_TEMPERATURA[i - 1];
+            const fraccion = (grados - inicio) / (tope - inicio);
+
+            const color = origen.map(
+                (valor, k) => Math.round(valor + (destino[k] - valor) * fraccion)
+            );
+
+            return `rgb(${color.join(",")})`;
+        }
+    }
+
+    return `rgb(${ultimo[1].join(",")})`;
 }
 
 function mostrarHoras(horario, actual) {
@@ -491,14 +608,16 @@ function mostrarHoras(horario, actual) {
 
         // Para "Ahora" se usan los valores reales del momento, que coinciden
         // con el dato grande de arriba.
-        const informacion = obtenerInformacionClima(
-            esAhora ? actual.weather_code : horario.weather_code[i],
-            esAhora ? actual.is_day : horario.is_day[i]
-        );
+        const codigo = esAhora ? actual.weather_code : horario.weather_code[i];
+        const esDia = esAhora ? actual.is_day : horario.is_day[i];
+
+        const informacion = obtenerInformacionClima(codigo, esDia);
 
         const temperatura = esAhora
             ? actual.temperature_2m
             : horario.temperature_2m[i];
+
+        const probabilidad = horario.precipitation_probability[i];
 
         const div = document.createElement("div");
 
@@ -514,7 +633,7 @@ function mostrarHoras(horario, actual) {
             </span>
 
             <span class="hora-icono" role="img" aria-label="${informacion[0]}">
-                ${informacion[1]}
+                ${iconoClima(codigo, esDia)}
             </span>
 
             <span class="hora-temperatura">
@@ -522,24 +641,74 @@ function mostrarHoras(horario, actual) {
             </span>
 
             <span class="hora-lluvia">
-                ${formatearNumero(horario.precipitation_probability[i], "%", "–")}
+                ${esNumero(probabilidad) && probabilidad >= 20 ? formatearNumero(probabilidad, "%") : ""}
             </span>
         `;
 
         contenedor.appendChild(div);
     }
 
+    poner("resumenHoras", resumenHoras(horario, actual, indiceActual));
+
     poner("horaActual", actual.time.slice(11, 16));
 }
 
-function mostrarPrevision(diario) {
+function crearBarraRango(minima, maxima, minSemana, amplitud, actual) {
+    if (!esNumero(minima) || !esNumero(maxima)) {
+        return "";
+    }
+
+    const ancho = Math.max(((maxima - minima) / amplitud) * 100, 4);
+
+    const izquierda = Math.min(
+        ((minima - minSemana) / amplitud) * 100,
+        100 - ancho
+    );
+
+    const relleno =
+        `<span class="barra-rango-relleno" style="` +
+        `left:${izquierda.toFixed(1)}%;` +
+        `width:${ancho.toFixed(1)}%;` +
+        `background:linear-gradient(90deg,` +
+        `${colorTemperatura(minima)},${colorTemperatura(maxima)})"></span>`;
+
+    // Solo en "Hoy": un punto con la temperatura de ahora dentro del rango.
+    if (!esNumero(actual)) {
+        return relleno;
+    }
+
+    const fraccion = Math.min(
+        Math.max((actual - minima) / Math.max(maxima - minima, 1), 0),
+        1
+    );
+
+    return (
+        relleno +
+        `<span class="barra-rango-punto" style="left:` +
+        `${(izquierda + ancho * fraccion).toFixed(1)}%"></span>`
+    );
+}
+
+function mostrarPrevision(diario, actual) {
     const contenedor = document.getElementById("prevision");
 
     contenedor.innerHTML = "";
 
+    poner("tituloPrevision", `PREVISIÓN A ${diario.time.length} DÍAS`);
+
+    const minimas = diario.temperature_2m_min.filter(esNumero);
+    const maximas = diario.temperature_2m_max.filter(esNumero);
+
+    // La barra de cada día se coloca dentro del rango de toda la previsión.
+    const minSemana = minimas.length ? Math.min(...minimas) : 0;
+    const maxSemana = maximas.length ? Math.max(...maximas) : 1;
+    const amplitud = Math.max(maxSemana - minSemana, 1);
+
     for (let i = 0; i < diario.time.length; i++) {
+        const codigo = diario.weather_code[i];
+
         const informacion =
-            clima[diario.weather_code[i]] ||
+            clima[codigo] ||
             ["Desconocido", "•", "nublado"];
 
         const fecha = new Date(diario.time[i] + "T12:00:00");
@@ -549,33 +718,50 @@ function mostrarPrevision(diario) {
                 ? "Hoy"
                 : fecha.toLocaleDateString("es-ES", { weekday: "short" });
 
+        const nombreLargo =
+            i === 0
+                ? "Hoy"
+                : fecha.toLocaleDateString("es-ES", { weekday: "long" });
+
+        const minima = diario.temperature_2m_min[i];
+        const maxima = diario.temperature_2m_max[i];
+        const lluvia = diario.precipitation_probability_max[i];
+        const hayLluvia = esNumero(lluvia) && lluvia >= 20;
+
         const div = document.createElement("div");
 
         div.className = "dia";
 
+        // Cada fila se lee de una vez; el contenido visual no se repite.
+        div.setAttribute("role", "listitem");
+
+        div.setAttribute(
+            "aria-label",
+            `${nombreLargo}: ${informacion[0]}, ` +
+            `mínima ${formatearNumero(minima, "°")}, ` +
+            `máxima ${formatearNumero(maxima, "°")}` +
+            (hayLluvia ? `, probabilidad de lluvia ${formatearNumero(lluvia, "%")}` : "")
+        );
+
         div.innerHTML = `
-            <span class="dia-nombre">
-                ${nombre}
+            <span class="dia-nombre" aria-hidden="true">${nombre}</span>
+
+            <span class="dia-icono" aria-hidden="true">
+                ${iconoClima(codigo, true)}
+                <span class="dia-lluvia">${hayLluvia ? formatearNumero(lluvia, "%") : ""}</span>
             </span>
 
-            <span class="dia-icono" role="img" aria-label="${informacion[0]}">
-                ${informacion[1]}
-            </span>
+            <span class="dia-min" aria-hidden="true">${formatearNumero(minima, "°")}</span>
 
-            <div class="dia-temperaturas">
-                <span class="dia-max">
-                    ${formatearNumero(diario.temperature_2m_max[i], "°")}
-                </span>
+            <span class="barra-rango" aria-hidden="true">${crearBarraRango(
+                minima,
+                maxima,
+                minSemana,
+                amplitud,
+                i === 0 ? actual.temperature_2m : null
+            )}</span>
 
-                <span class="dia-min">
-                    ${formatearNumero(diario.temperature_2m_min[i], "°")}
-                </span>
-            </div>
-
-            <span class="dia-lluvia">
-                ${formatearNumero(diario.precipitation_probability_max[i], "%", "–")}
-                lluvia
-            </span>
+            <span class="dia-max" aria-hidden="true">${formatearNumero(maxima, "°")}</span>
         `;
 
         contenedor.appendChild(div);
