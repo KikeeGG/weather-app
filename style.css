@@ -19,6 +19,7 @@ html {
 
 body {
     min-height: 100vh;
+    min-height: 100dvh;
     color: var(--texto);
     font-family:
         -apple-system,
@@ -63,19 +64,12 @@ body.noche {
     height: 110%;
     object-fit: cover;
     z-index: 0;
-    filter: blur(5px);
+    /* Un solo desenfoque: equivale a los dos de 5px que había antes
+       (vídeo + capa de backdrop-filter a pantalla completa). */
+    filter: blur(7px);
     transform: scale(1.08);
     opacity: 0.72;
     transition: opacity 0.8s ease;
-}
-
-.fondo-desenfoque {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    pointer-events: none;
 }
 
 .fondo-oscuro {
@@ -98,6 +92,7 @@ body.noche {
     width: 100%;
     max-width: 520px;
     min-height: 100vh;
+    min-height: 100dvh;
     margin: auto;
     padding:
         calc(20px + env(safe-area-inset-top))
